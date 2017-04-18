@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Config">
+	<!-- CREATE TABLE `Alarm` ( `FKEY` VARCHAR(40) DEFAULT NULL, `FPROJECT` 
+		VARCHAR(128) DEFAULT NULL, `FDESC` VARCHAR(128) DEFAULT NULL, `FURL` VARCHAR(256) 
+		DEFAULT NULL, `FPARAM` VARCHAR(1024) DEFAULT NULL, `FHANDLE` VARCHAR(32) 
+		DEFAULT NULL, `FINTERVAL` INT(11) DEFAULT NULL, `FCRON` VARCHAR(32) DEFAULT 
+		NULL, `FNOTIFY` VARCHAR(1024) DEFAULT NULL, `FCALLBACK` VARCHAR(32) DEFAULT 
+		NULL, `FEXPECT` VARCHAR(64) DEFAULT NULL, `FTYPE` INT(4) DEFAULT NULL, `FLAST_NOTIFY` 
+		INT(10) DEFAULT NULL, `FRESULT` TEXT ) ENGINE=INNODB DEFAULT CHARSET=UTF8 -->
+	<resultMap type="Config" id="Config">
+
+		<result column="FID" jdbcType="INTEGER" property="id" />
+		<result column="FCONFIG" jdbcType="VARCHAR" property="config" />
+		<result column="FTYPE" jdbcType="VARCHAR" property="type" />
+		<result column="FNAME" jdbcType="VARCHAR" property="name" />
+		<result column="FDESC" jdbcType="VARCHAR" property="desc" />
+		<result column="FSTATUS" jdbcType="INTEGER" property="status" />
+
+
+	</resultMap>
+
+
+	<insert id="add">
+		INSERT INTO T_BI_CONFIG
+		(
+		FCONFIG,
+		FTYPE,
+		FNAME,
+		FDESC,
+		FSTATUS
+		)
+		VALUES
+		(
+		#{config},
+		#{type},
+		#{name},
+		#{desc},
+		#{status}
+		)
+	</insert>
+
+	<insert id="edit">
+		update T_BI_CONFIG
+		set
+		FCONFIG = #{config},
+		FDESC=#{desc},
+		FTYPE=#{type},
+		FNAME =#{name}
+		where
+		FID = #{id}
+	</insert>
+
+	<select id="find" resultMap="Config">
+		select FID,
+		FCONFIG,
+		FTYPE,
+		FNAME,
+		FDESC,
+		FSTATUS
+		from
+		T_BI_CONFIG
+		where 1=1
+		<if test="name!=null">
+			and FNAME like concat('%', #{name},'%')
+		</if>
+		<if test="type!=null">
+			and FTYPE = #{type}
+		</if>
+		<if test="id!=null">
+			and FID = #{id}
+		</if>
+	</select>
+	
+		<select id="findOne" resultMap="Config">
+		select FID,
+		FCONFIG,
+		FTYPE,
+		FNAME,
+		FDESC,
+		FSTATUS
+		from
+		T_BI_CONFIG
+		where 1=1
+		<if test="name!=null">
+			and FNAME =#{name}
+		</if>
+		<if test="type!=null">
+			and FTYPE = #{type}
+		</if>
+		<if test="id!=null">
+			and FID = #{id}
+		</if>
+		limit 1
+	</select>
+	
+	
+		<select id="findByType" resultMap="Config">
+		select FID,
+		FCONFIG,
+		FTYPE,
+		FNAME,
+		FDESC,
+		FSTATUS
+		from
+		T_BI_CONFIG
+		where FTYPE = #{type}
+
+
+	</select>
+
+
+	<delete id="del">
+
+		DELETE FROM T_BI_CONFIG
+		WHERE
+		FID = #{id} ;
+
+
+	</delete>
+
+
+
+
+</mapper>

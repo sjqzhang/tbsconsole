@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>任务调度平台</title>
+<link rel="stylesheet" type="text/css"
+	href="../css/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="../css/themes/icon.css">
+<script type="text/javascript" src="../js/json2.js"></script>
+<script type="text/javascript" src="../js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="../js/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../js/constant.js"></script>
+<script type="text/javascript" src="../js/util.js"></script>
+</head>
+<body>
+
+
+
+
+	<div id="zkdata">
+
+
+		
+
+	</div>
+
+
+	<script>
+		$(document).ready(function() {
+
+			
+			$.Post('c/manageService/getZKData', {
+				'project' : getProjectName()
+				
+			}, function(data) {
+				$('#zkdata').html(data.reply);
+			});
+		});
+	</script>
+</body>
+</html>

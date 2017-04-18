@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>任务调度平台</title>
+<link rel="stylesheet" type="text/css"
+	href="../css/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="../css/themes/icon.css">
+<script type="text/javascript" src="../js/json2.js"></script>
+<script type="text/javascript" src="../js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="../js/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../js/constant.js"></script>
+<script type="text/javascript" src="../js/util.js"></script>
+<script type="text/javascript" src="../js/grid.js"></script>
+</head>
+<body>
+
+
+
+		<table id="gridTable">
+			<thead>
+				<tr>
+
+
+					<!-- 
+     com.taobao.pamirs.schedule.strategy.ScheduleStrategy@1cf95a8[type=<null>,ips=<null>,strategyName=sdfsd,IPList={127.0.0.1},
+     numOfSingleServer=0,assignNum=2,kind=Schedule,taskName=fasdfasdf,taskParameter=sdf,sts=resume]
+      -->
+					<th data-options="field:'itemid',formatter:strategy.formatter">管理</th>
+					<th field="strategyName">策略名称</th>
+					<th field="sts">任务状态</th>
+					<th field="kind">任务类型</th>
+					<th field="taskName">任务名称</th>
+					<th field="taskParameter">任务参数</th>
+					<th field="assignNum">单JVM最大线程组数量</th>
+					<th field="numOfSingleServer">最大线程组数量</th>
+					<th field="iplist">IP地址(逗号分隔)</th>
+				</tr>
+			</thead>
+		</table>
+		
+		
+		
+		
+<table id="runtimeGrid">
+     <thead><tr>
+     	<th field="strategyName">任务类型</th> 
+     	<th  field="uuid">处理机器</th>
+    	<th  field="requestNum">线程组数量</th>
+    	<th field="message">错误信息</th>
+     </tr>
+</thead>
+</table>
+
+
+<div id="ttt"></div>
+
+
+
+
+
+
+
+
+
+
+	<div id="editContainer" class="easyui-dialog" title="策略编辑">
+
+		<form action="scheduleStrategyDeal.jsp" name="scheduleStrategyForm"
+			method="get" id="scheduleStrategyForm">
+			<input type="hidden" value="createScheduleStrategy" name="action">
+			<table>
+				<tbody>
+					<tr>
+						<td>策略名称:</td>
+						<td><input width="30" type="text" value=""
+							name="strategyName" id="strategyName"></td>
+						<td>必须填写，不能有中文和特殊字符</td>
+					</tr>
+					<tr>
+						<td>任务类型:</td>
+						<td><input width="30" type="text" value="Schedule"
+							name="type" id="type"></td>
+						<td>可选类型：Schedule,Java,Bean 大小写敏感</td>
+					</tr>
+					<tr>
+						<td>任务名称:</td>
+						<td><input width="30" type="text" value="" name="taskName"
+							id="taskName"></td>
+						<td>与任务类型匹配的名称例如：1、任务管理中配置的任务名称(对应Schedule) 2、Class名称(对应java)
+							3、Bean的名称(对应Bean)</td>
+					</tr>
+					<tr>
+						<td>任务参数:</td>
+						<td><input width="30" type="text" value=""
+							name="taskParameter" id="taskParameter"></td>
+						<td>逗号分隔的Key-Value。 对任务类型为Schedule的无效，需要通过任务管理来配置的</td>
+					</tr>
+
+					<tr>
+						<td>单JVM最大线程组数量:</td>
+						<td><input width="30" type="text" value="0"
+							name="numOfSingleServer" id="numOfSingleServer"></td>
+						<td>单JVM最大线程组数量，如果是0，则表示没有限制.每台机器运行的线程组数量 =总量/机器数</td>
+					</tr>
+					<tr>
+						<td>最大线程组数量：</td>
+						<td><input width="30" type="text" value="2" name="assignNum"></td>
+						<td>所有服务器总共运行的最大数量</td>
+					</tr>
+					<tr>
+						<td>IP地址(逗号分隔)：</td>
+						<td><input width="30" type="text" value="127.0.0.1" id="ips"
+							name="ips"></td>
+						<td>127.0.0.1或者localhost会在所有机器上运行</td>
+					</tr>
+				</tbody>
+			</table>
+			<br> <input type="button" style="width: 100px" id="btnSave"
+				value="保存">
+
+		</form>
+
+	</div>
+	
+
+
+
+	<script>
+	
+	
+
+	var strategyName='';
+	
+	var selectIndex=0;
+
+	
+	function Strategy(){
+		
+		Grid.apply(this);
+		var that=this;
+
+
+		this.getGridOptions=function(){
+			var options={
+					'selector':that.gridSelector,
+					'urlSelect':'c/manageService/loadAllScheduleStrategy?project='+getProjectName(),
+					'urlUpdate':'c/manageService/updateScheduleStrategy',
+					'urlDelete':'c/manageService/deleteScheduleStrategy'
+					
+					
+			}
+			return options;
+		}
+		
+		
+		this.getUpdateParam=function(){
+		return	{
+				'project' :getProjectName(),
+				'strategy' : that.buildParam()
+			}
+		}
+		
+		this.getDeleteParam=function(val,data,index){
+			return {
+				'project' :getProjectName(),
+				'strategyName' : data.strategyName
+			}
+		}
+		
+		this.editStatus=function(val,data,i){
+			selectIndex=i;
+			$.Post('c/manageService/switchStrategyStatus',{
+				'project' :getProjectName(),
+				'strategyName' : data.strategyName,
+				'sts':data.sts
+			},function(data){
+				$(that.gridSelector).datagrid('reload');
+			})
+		}
+		
+		
+		this.editHandle=function(val,data,i){
+			bindParam(data,that.editContainer);
+			if(data.iplist){
+				$('#ips').val(data.iplist.join(','));
+			}
+			$('#type').val(data.kind);
+			that.addHandle();
+		}
+		
+		this.formatter=function(val,data,i){		
+			var name=that.getIntanceName();
+			//log(name)
+			var str=encode( JSON.stringify({'val':val?val:'','data':data,'index':i}))
+			var ret= '<a href="#" onclick="'+name+'.operation(\''+str+'\',\'delHandle\')">删除</a>&nbsp;';
+			ret+= '<a href="#" onclick="'+name+'.operation(\''+str+'\',\'editHandle\')">修改</a>&nbsp;';
+			if(data.sts=='resume'){
+				ret+= '<a href="#" onclick="'+name+'.operation(\''+str+'\',\'editStatus\')">停止</a>&nbsp;';
+			} else {
+				ret+= '<a href="#" onclick="'+name+'.operation(\''+str+'\',\'editStatus\')">恢复</a>&nbsp;';
+			}
+			return ret;
+		
+		
+		}
+		
+		
+		this.onSelect=function(rowIndex,rowData){
+			strategyName=rowData.strategyName;
+			runtimeGrid.gridSimple(runtimeGrid.getGridOptions());
+		}
+		this.onLoadSuccess=function(data){
+			if(data.total==0){
+				runtimeGrid.gridSimple(runtimeGrid.getGridOptions());	
+			}
+			$(that.gridSelector).datagrid('selectRow', selectIndex);
+		}
+		
+
+		
+	
+
+		
+		
+	
+		/*
+		this.formatter=function(val,data,i){
+			var str=encode( JSON.stringify({'val':val?val:'','data':data,'index':i}))
+			var ret= '<a href="#" onclick="stragegy.operation(\''+str+'\',\'delHandle\')">删除</a>&nbsp;';
+			ret+= '<a href="#" onclick="stragegy.operation(\''+str+'\',\'editHandle\')">修改</a>&nbsp;';
+			
+			return ret;
+		}
+		*/
+
+		
+	}
+	
+	
+
+
+
+	
+	var strategy=new Strategy();
+	
+	
+	
+	function RuntimeGrid(){
+		Grid.apply(this);
+		var that=this;
+		this.editContainer='#ttt';
+		this.gridSelector='#runtimeGrid';
+		this.getGridOptions=function(){
+			var options={
+					'selector':that.gridSelector,
+					'urlSelect':'c/manageService/loadAllScheduleStrategyRunntimeByTaskType'
+
+					
+					
+			}
+			return options;
+		}
+		this.getSelectParam=function(){
+			
+			return {'project':getProjectName(),
+				'strategyName':strategyName
+			}
+		}
+		
+	}
+	
+	var runtimeGrid=new RuntimeGrid();
+	
+
+	
+
+	
+		$(document).ready(function() {
+			
+			$('#editContainer').dialog('close');
+			
+			//runtimeGrid.gridSimple(runtimeGrid.getGridOptions());
+			
+		
+			strategy.gridSimple2(strategy.getGridOptions());
+			//strategy.initEvent();
+	
+			$('#btnSave').click(function() {
+				strategy.updateHandle();
+			});//end click
+			
+
+
+		
+			 
+
+				});
+	</script>
+</body>
+</html>
